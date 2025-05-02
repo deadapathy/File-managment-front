@@ -2,14 +2,16 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import ApolloProviderWrapper from '../../lib/ApolloProvider'
 
 type ProtectedRouteProps = {
-	isLoggedIn: boolean
 	children: React.ReactNode
 }
 
-const ProtectedRoute = ({ isLoggedIn, children }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 	const router = useRouter()
+	const isLoggedIn =
+		typeof window !== 'undefined' && localStorage.getItem('token')
 
 	useEffect(() => {
 		if (!isLoggedIn) {
@@ -17,7 +19,7 @@ const ProtectedRoute = ({ isLoggedIn, children }: ProtectedRouteProps) => {
 		}
 	}, [isLoggedIn, router])
 
-	return <>{children}</>
+	return <ApolloProviderWrapper>{children}</ApolloProviderWrapper>
 }
 
 export default ProtectedRoute

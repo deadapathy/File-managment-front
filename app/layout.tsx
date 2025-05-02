@@ -24,10 +24,16 @@ export default function RootLayout({
 									itemSelectedColor: '#fff',
 									itemActiveBg: 'RGB(42, 43, 42)',
 								},
+								Modal: {
+									contentBg: 'rgb(60, 64, 67)',
+									headerBg: 'rgb(60, 64, 67)',
+									titleColor: '#fff',
+									colorIcon: '#fff',
+								},
 							},
 						}}
 					>
-						<ProtectedRoute isLoggedIn={false}>{children}</ProtectedRoute>
+						<ProtectedRoute>{children}</ProtectedRoute>
 					</ConfigProvider>
 				}
 			</body>

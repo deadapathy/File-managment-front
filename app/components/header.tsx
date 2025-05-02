@@ -18,7 +18,7 @@ const Header = () => {
 				alignItems: 'center',
 			}}
 		>
-			<Flex style={{ alignItems: 'center' }}>
+			<Flex style={{ alignItems: 'center', gap: 10 }}>
 				<AntCloudOutlined style={{ fontSize: 40, color: '#fff' }} />
 				<Title
 					level={3}
