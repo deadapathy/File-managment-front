@@ -30,6 +30,24 @@ export default function RootLayout({
 									titleColor: '#fff',
 									colorIcon: '#fff',
 								},
+								Table: {
+									headerBg: 'rgb(42 42 44)',
+									headerColor: '#fff',
+									headerBorderRadius: 0,
+									colorBgContainer: 'rgb(42 42 44)',
+									borderColor: '#ccc',
+									colorText: '#fff',
+									rowSelectedBg: '#014A76',
+									rowHoverBg: 'rgb(60, 64, 67)',
+									rowSelectedHoverBg: '#014A76',
+								},
+								Pagination: {
+									itemActiveBg: 'rgb(42, 42, 44)',
+									colorTextDisabled: '#fff',
+								},
+								Breadcrumb: {
+									separatorColor: '#fff',
+								},
 							},
 						}}
 					>

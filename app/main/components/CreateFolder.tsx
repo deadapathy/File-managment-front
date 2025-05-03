@@ -2,12 +2,14 @@ import { Input, InputRef, Modal } from 'antd'
 import { Dispatch, SetStateAction, useEffect, useRef } from 'react'
 import { gql, useMutation } from '@apollo/client'
 import CustomAlert from '../../../utils/CustomAlert'
+import { useUploadStore } from '../../../store/uploadStatusStore'
 
 type CreateFolderProps = {
 	folderName: string
 	isModalOpen: boolean
 	setIsModalOpen: Dispatch<SetStateAction<boolean>>
 	setFolderName: Dispatch<SetStateAction<string>>
+	refetch: () => void
 }
 
 const CREATE_FOLDER = gql`
@@ -24,9 +26,11 @@ const CreateFolder = ({
 	isModalOpen,
 	setIsModalOpen,
 	setFolderName,
+	refetch,
 }: CreateFolderProps) => {
 	const inputRef = useRef<InputRef>(null)
-	const [createFolder] = useMutation(CREATE_FOLDER)
+	const [createFolder, { loading }] = useMutation(CREATE_FOLDER)
+	const { setUploading, setStatusText } = useUploadStore()
 
 	const handleCancel = () => {
 		setIsModalOpen(false)
@@ -34,10 +38,11 @@ const CreateFolder = ({
 
 	const handleSend = async () => {
 		try {
+			setIsModalOpen(false)
 			const res = await createFolder({ variables: { folderName } })
 			const { message } = res.data.createFolder
 			CustomAlert.success(message)
-			setIsModalOpen(false)
+			await refetch()
 		} catch (error: any) {
 			CustomAlert.error(error.message)
 		}
@@ -50,6 +55,11 @@ const CreateFolder = ({
 			}, 200)
 		}
 	}, [isModalOpen])
+
+	useEffect(() => {
+		setUploading(loading)
+		setStatusText('Создание папки')
+	}, [loading])
 
 	return (
 		<Modal

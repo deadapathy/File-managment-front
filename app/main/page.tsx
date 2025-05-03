@@ -2,92 +2,100 @@
 
 import {
 	AppstoreOutlined,
-	CaretDownOutlined,
+	LoadingOutlined,
 	UnorderedListOutlined,
 } from '@ant-design/icons'
-import { Button, Divider, Flex, Input, InputRef, Popover, Upload } from 'antd'
-import { ChangeEvent, useRef, useState } from 'react'
+import { Divider, Flex, Spin, Typography } from 'antd'
+import { useEffect, useState } from 'react'
 import CreateFolder from './components/CreateFolder'
 import { gql, useQuery } from '@apollo/client'
-import usePreviewStore from '../../store/previewStore'
 import PreviewImages from './components/PreviewImages'
-import { UploadChangeParam, UploadFile } from 'antd/es/upload'
+import { useUploadStore } from '../../store/uploadStatusStore'
+import { useFileStore } from '../../store/filesDataStore'
+import FileList from './components/FileList'
+import BreadCrumb from './components/Breadcrumb'
+import { useFolderStore } from '../../store/folderDataStore'
 
-const LIST_FOLDERS = gql`
-	query {
-		listFolders {
+const FILES_DATA = gql`
+	query files($folderId: ID) {
+		files(folderId: $folderId) {
+			_id
 			name
+			size
+			type
+			url
+			uploadedAt
+			folderId
+		}
+	}
+`
+
+const FOLDERS_DATA = gql`
+	query {
+		folders {
+			_id
+			name
+			size
+			url
+			uploadedAt
 		}
 	}
 `
 
 const MainPage = () => {
-	const { data } = useQuery(LIST_FOLDERS)
+	// STORES
+	const { isUploading, statusText } = useUploadStore()
+	const { setFiles, setFolders } = useFileStore()
+	const { folderData } = useFolderStore()
+
+	// API REQ
+	const {
+		data: filesData,
+		loading: filesLoading,
+		refetch: filesRefetch,
+	} = useQuery(FILES_DATA, { variables: { folderId: folderData?._id } })
+	const {
+		data: foldersData,
+		loading: foldersLoading,
+		refetch: foldersRefetch,
+	} = useQuery(FOLDERS_DATA)
+
+	// STATES
 	const [filterType, setFilterType] = useState<'list' | 'grid'>('list')
 	const [isModalOpen, setIsModalOpen] = useState(false)
 	const [isPreviewModal, setIsPreviewModal] = useState(false)
 	const [folderName, setFolderName] = useState<string>('Без названия')
-	const fileInputRef = useRef<HTMLInputElement>(null)
-	const { setImages } = usePreviewStore()
 
-	const handleFileClick = () => {
-		if (fileInputRef.current) {
-			fileInputRef.current?.click()
+	useEffect(() => {
+		if (filesData && filesData.files) {
+			console.log(filesData)
+			setFiles(filesData.files)
 		}
-	}
+	}, [filesData])
 
-	const handleUpload = (e: UploadChangeParam<UploadFile<any>>) => {
-		setImages(e.fileList)
-		setIsPreviewModal(true)
-	}
-
-	const content = (
-		<Flex vertical>
-			<Button variant="outlined" onClick={() => setIsModalOpen(!isModalOpen)}>
-				Создать папку
-			</Button>
-			<Divider style={{ margin: 5 }} />
-			<Upload
-				multiple
-				customRequest={() => {}}
-				onChange={(e) => handleUpload(e)}
-			>
-				<Button>Загрузить файлы</Button>
-			</Upload>
-		</Flex>
-	)
+	useEffect(() => {
+		if (foldersData && foldersData.folders) {
+			setFolders(foldersData.folders)
+		}
+	}, [foldersData])
 
 	return (
 		<>
 			<Flex
 				vertical
 				style={{
-					background: '#131314',
-					height: '85%',
+					background: 'rgb(42 42 44)',
+					height: '88vh',
 					borderRadius: 15,
+					position: 'relative',
 				}}
 			>
+				{/* HEADER CONTENT */}
 				<Flex style={{ padding: 20, justifyContent: 'space-between' }}>
-					<Popover
-						content={content}
-						placement="bottom"
-						style={{ background: 'rgb(60, 64, 67)' }}
-					>
-						<Button
-							size="large"
-							type="default"
-							variant="outlined"
-							icon={<CaretDownOutlined />}
-							iconPosition="end"
-							style={{
-								background: 'transparent',
-								color: '#fff',
-								border: 'none',
-							}}
-						>
-							Мое хранилище
-						</Button>
-					</Popover>
+					<BreadCrumb
+						setIsModalOpen={setIsModalOpen}
+						setIsPreviewModal={setIsPreviewModal}
+					/>
 
 					<Flex
 						style={{
@@ -119,18 +127,58 @@ const MainPage = () => {
 						/>
 					</Flex>
 				</Flex>
+
+				{/* MAIN CONTENT */}
+				{filesLoading && foldersLoading ? (
+					<Spin />
+				) : (
+					<FileList
+						filesRefetch={filesRefetch}
+						foldersRefetch={foldersRefetch}
+					/>
+				)}
+
+				{/* LOADER */}
+				{isUploading && (
+					<Flex
+						style={{
+							position: 'absolute',
+							bottom: 15,
+							right: 15,
+							gap: 15,
+							background: 'rgb(60, 64, 67)',
+							borderRadius: 15,
+							padding: 10,
+							width: '30%',
+						}}
+						vertical
+					>
+						<Typography.Title
+							style={{ color: '#fff', textAlign: 'center' }}
+							level={5}
+						>
+							{statusText}
+						</Typography.Title>
+						<Spin
+							indicator={<LoadingOutlined style={{ fontSize: 35 }} spin />}
+						/>
+					</Flex>
+				)}
 			</Flex>
 
+			{/* MODALS */}
 			<CreateFolder
 				isModalOpen={isModalOpen}
 				setIsModalOpen={setIsModalOpen}
 				folderName={folderName}
 				setFolderName={setFolderName}
+				refetch={foldersRefetch}
 			/>
 
 			<PreviewImages
 				isModalOpen={isPreviewModal}
 				setIsModalOpen={setIsPreviewModal}
+				refetch={filesRefetch}
 			/>
 		</>
 	)

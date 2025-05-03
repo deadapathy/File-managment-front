@@ -1,7 +1,7 @@
 import { UploadFile } from 'antd'
 import { create } from 'zustand'
 
-interface PreviewStoreState {
+type PreviewStoreState = {
 	images: UploadFile<any>[]
 	imagesURL: string[]
 	setImages: (files: UploadFile<any>[]) => void
@@ -9,7 +9,7 @@ interface PreviewStoreState {
 	clearImages: () => void
 }
 
-const usePreviewStore = create<PreviewStoreState>((set) => ({
+const usePreviewStore = create<PreviewStoreState>((set, get) => ({
 	images: [],
 	imagesURL: [],
 	setImages: (files: UploadFile<any>[]) => {
@@ -22,22 +22,34 @@ const usePreviewStore = create<PreviewStoreState>((set) => ({
 		set({ imagesURL: imagePreviews, images: files })
 	},
 	updateImages: (index: number) => {
-		set((state) => {
-			const updatedFiles = state.images.filter((_, idx) => idx !== index)
-			const updatedURLs = updatedFiles.map((file) => {
-				if (file.originFileObj) {
-					return URL.createObjectURL(file.originFileObj)
-				}
-				return file.url || ''
-			})
+		const state = get()
 
-			return {
-				images: updatedFiles,
-				imagesURL: updatedURLs,
+		const fileToRemove = state.images[index]
+		if (fileToRemove?.originFileObj) {
+			URL.revokeObjectURL(state.imagesURL[index])
+		}
+
+		const updatedFiles = state.images.filter((_, idx) => idx !== index)
+		const updatedURLs = updatedFiles.map((file) => {
+			if (file.originFileObj) {
+				return URL.createObjectURL(file.originFileObj)
 			}
+			return file.url || ''
+		})
+
+		set({
+			images: updatedFiles,
+			imagesURL: updatedURLs,
 		})
 	},
-	clearImages: () => set({ images: [] }),
+	clearImages: () => {
+		const state = get()
+
+		state.imagesURL.forEach((url) => {
+			URL.revokeObjectURL(url)
+		})
+		set({ images: [], imagesURL: [] })
+	},
 }))
 
 export default usePreviewStore
