@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons'
 import { Divider, Flex, Spin, Typography } from 'antd'
 import { useEffect, useState } from 'react'
-import CreateFolder from './components/CreateFolder'
+import CreateFolder from './components/FolderModal'
 import { gql, useQuery } from '@apollo/client'
 import PreviewImages from './components/PreviewImages'
 import { useUploadStore } from '../../store/uploadStatusStore'
@@ -68,7 +68,6 @@ const MainPage = () => {
 
 	useEffect(() => {
 		if (filesData && filesData.files) {
-			console.log(filesData)
 			setFiles(filesData.files)
 		}
 	}, [filesData])

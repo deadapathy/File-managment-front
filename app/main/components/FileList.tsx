@@ -11,10 +11,12 @@ import { FilesDataType } from '../../../types/filesType'
 import { useFileStore } from '../../../store/filesDataStore'
 import { FolderOutlined, MoreOutlined } from '@ant-design/icons'
 import { useFolderStore } from '../../../store/folderDataStore'
-import { gql, useMutation } from '@apollo/client'
+import { gql, useLazyQuery, useMutation, useQuery } from '@apollo/client'
 import CustomAlert from '../../../utils/CustomAlert'
 import { useUploadStore } from '../../../store/uploadStatusStore'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import RenameModal from './RenameModal'
+import MoveFileModal from './MoveFileModal'
 
 type FilesListProps = {
 	filesRefetch: () => void
@@ -30,6 +32,12 @@ const DELETE_FILE = gql`
 const DELETE_FOLDER = gql`
 	mutation DeleteFolder($folderUrl: String!, $folderId: ID!) {
 		deleteFolder(folderUrl: $folderUrl, folderId: $folderId)
+	}
+`
+
+const DOWNLOAD_FILE = gql`
+	query getDownloadUrl($key: String!) {
+		getDownloadUrl(key: $key)
 	}
 `
 
@@ -51,10 +59,21 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 	const [deleteFile, { loading: deleteFileLoading }] = useMutation(DELETE_FILE)
 	const [deleteFolder, { loading: deleteFolderLoading }] =
 		useMutation(DELETE_FOLDER)
+	const [getDownloadUrl] = useLazyQuery(DOWNLOAD_FILE)
 
 	const { files, folders } = useFileStore()
 	const { folderData, setFolderData } = useFolderStore()
 	const { setUploading, setStatusText } = useUploadStore()
+
+	const [modal, setModal] = useState<{
+		open: boolean
+		data: FilesDataType | undefined
+		type: 'rename' | 'move' | undefined
+	}>({
+		open: false,
+		type: undefined,
+		data: undefined,
+	})
 
 	const menuItems: MenuProps['items'] = [
 		{
@@ -68,6 +87,10 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 		{
 			key: '3',
 			label: 'Удалить',
+		},
+		{
+			key: '4',
+			label: 'Переместить',
 		},
 	]
 
@@ -130,7 +153,7 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 							menu={{
 								items: menuItems.filter((menu) => {
 									if (record.type === 'folder') {
-										return menu?.key !== '2'
+										return menu?.key !== '2' && menu?.key !== '4'
 									}
 									return true
 								}),
@@ -145,16 +168,6 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 			},
 		},
 	]
-
-	const handleMenuClick = async (key: string, record: FilesDataType) => {
-		if (key === '1') {
-			console.log('Переименовать:', record)
-		} else if (key === '2') {
-			window.open(record.url)
-		} else {
-			handleDelete(record)
-		}
-	}
 
 	const handleDelete = async (record: FilesDataType) => {
 		try {
@@ -184,25 +197,58 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 		}
 	}
 
+	const handleMenuClick = async (key: string, record: FilesDataType) => {
+		if (key === '1') {
+			// Rename
+			setModal({ ...modal, open: true, data: record, type: 'rename' })
+		} else if (key === '2') {
+			// Download
+			const fileKey = decodeURIComponent(new URL(record.url).pathname.slice(1))
+
+			getDownloadUrl({
+				variables: { key: fileKey },
+				onCompleted: (data) => {
+					const downloadUrl = data?.getDownloadUrl
+					if (downloadUrl) {
+						window.open(downloadUrl, '_blank')
+					}
+				},
+				onError: (err) => {
+					CustomAlert.error(err.message)
+				},
+			})
+		} else if (key === '3') {
+			// Delete
+			handleDelete(record)
+		} else {
+			setModal({ ...modal, open: true, data: record, type: 'move' })
+		}
+	}
+
 	const handleRowDoubleClick = (record: FilesDataType) => {
 		if (record.type === 'folder') {
 			setFolderData(record)
 		}
 	}
 
-	const combinedData = [
-		...folders
+	const combinedData = useMemo(() => {
+		const filteredFolders = folders
 			.filter((folder) => (folderData ? !folder : folder))
 			.map((folder) => ({
 				...folder,
 				type: 'folder',
-			})),
-		...files
-			.filter((file) => (folderData ? folderData?._id === file.folderId : file))
+			}))
+
+		const filteredFiles = files
+			.filter((file) =>
+				file.folderId ? folderData?._id === file.folderId : file
+			)
 			.map((file) => ({
 				...file,
-			})),
-	]
+			}))
+
+		return [...filteredFolders, ...filteredFiles]
+	}, [folders, files, folderData])
 
 	useEffect(() => {
 		setUploading(deleteFolderLoading)
@@ -227,6 +273,26 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 				})}
 				pagination={{ pageSize: 10 }}
 			/>
+
+			{modal.type === 'rename' && (
+				<RenameModal
+					closeModal={() => setModal({ ...modal, open: false })}
+					isModalOpen={modal.open}
+					data={modal.data}
+					filesRefetch={filesRefetch}
+					foldersRefetch={foldersRefetch}
+				/>
+			)}
+
+			{modal.type === 'move' && (
+				<MoveFileModal
+					isModalOpen={modal.open}
+					closeModal={() => setModal({ ...modal, open: false })}
+					fileData={modal.data}
+					filesRefetch={filesRefetch}
+					foldersRefetch={foldersRefetch}
+				/>
+			)}
 		</div>
 	)
 }
