@@ -12,6 +12,11 @@ npm install
 npm run dev
 ```
 
+To start with Docker
+```
+docker-compose up --build
+```
+
 Also need to run backend
 
 ### BASIC FUNCIONALITY
