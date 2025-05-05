@@ -1,9 +1,12 @@
+import React from 'react'
 import { Input, InputRef, Modal } from 'antd'
 import { useEffect, useRef, useState } from 'react'
-import { FilesDataType } from '../../../types/filesType'
-import { gql, useMutation } from '@apollo/client'
-import CustomAlert from '../../../utils/CustomAlert'
-import { useUploadStore } from '../../../store/uploadStatusStore'
+import { useMutation } from '@apollo/client'
+import { FilesDataType } from '@/types/filesType'
+import { useUploadStore } from '@/store/uploadStatusStore'
+import { RENAME_FILE } from '@/graphql/mutations'
+import CustomAlert from '@/utils/customAlert'
+import { handleError } from '@/utils/handleError'
 
 type RenameModalProps = {
 	isModalOpen: boolean
@@ -12,24 +15,6 @@ type RenameModalProps = {
 	filesRefetch: () => void
 	foldersRefetch: () => void
 }
-
-const RENAME_FILE = gql`
-	mutation RenameFile(
-		$oldKey: String!
-		$newKey: String!
-		$fileId: ID!
-		$newName: String!
-		$type: String!
-	) {
-		renameFile(
-			fileId: $fileId
-			oldKey: $oldKey
-			newKey: $newKey
-			newName: $newName
-			type: $type
-		)
-	}
-`
 
 const RenameModal = ({
 	isModalOpen,
@@ -70,8 +55,8 @@ const RenameModal = ({
 			CustomAlert.success(res.data.renameFile)
 			filesRefetch()
 			foldersRefetch()
-		} catch (error: any) {
-			CustomAlert.error(error.message)
+		} catch (error) {
+			CustomAlert.error(handleError(error))
 		}
 	}
 

@@ -1,24 +1,21 @@
+import React from 'react'
 import { Flex, Modal, Space } from 'antd'
-import usePreviewStore from '../../../store/previewStore'
 import Image from 'next/image'
 import { CloseOutlined } from '@ant-design/icons'
-import { gql, useMutation } from '@apollo/client'
-import { useUploadStore } from '../../../store/uploadStatusStore'
-import CustomAlert from '../../../utils/CustomAlert'
+import { useMutation } from '@apollo/client'
 import { useEffect } from 'react'
-import { useFolderStore } from '../../../store/folderDataStore'
+import { MULTI_UPLOAD } from '@/graphql/mutations'
+import usePreviewStore from '@/store/previewStore'
+import { useUploadStore } from '@/store/uploadStatusStore'
+import { useFolderStore } from '@/store/folderDataStore'
+import CustomAlert from '@/utils/customAlert'
+import { handleError } from '@/utils/handleError'
 
 type PreviewImagesProps = {
 	isModalOpen: boolean
 	setIsModalOpen: (isModalOpen: boolean) => void
 	refetch: () => void
 }
-
-const MULTI_UPLOAD = gql`
-	mutation MultiUpload($input: MultiUploadInput!, $folderId: ID) {
-		multiUpload(input: $input, folderId: $folderId)
-	}
-`
 
 const PreviewImages = ({
 	isModalOpen,
@@ -52,8 +49,8 @@ const PreviewImages = ({
 			CustomAlert.success('Files uploaded successfully')
 			await refetch()
 			clearImages()
-		} catch (error: any) {
-			CustomAlert.error(error.message)
+		} catch (error) {
+			CustomAlert.error(handleError(error))
 		}
 	}
 

@@ -1,12 +1,7 @@
 'use client'
 
 import React from 'react'
-import {
-	DeleteOutlined,
-	FieldTimeOutlined,
-	HomeOutlined,
-	StarOutlined,
-} from '@ant-design/icons'
+import { HomeOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { Menu } from 'antd'
 import Link from 'next/link'
@@ -18,21 +13,6 @@ const items: MenuItem[] = [
 		key: '/',
 		label: <Link href="/">Главная</Link>,
 		icon: <HomeOutlined />,
-	},
-	{
-		key: 'sub1',
-		label: <Link href="/favorites">Избранное</Link>,
-		icon: <StarOutlined />,
-	},
-	{
-		key: 'sub2',
-		label: 'Недавние',
-		icon: <FieldTimeOutlined />,
-	},
-	{
-		key: 'sub3',
-		label: 'Корзина',
-		icon: <DeleteOutlined />,
 	},
 ]
 

@@ -1,5 +1,5 @@
 'use client'
-
+import React from 'react'
 import {
 	AppstoreOutlined,
 	LoadingOutlined,
@@ -8,39 +8,14 @@ import {
 import { Divider, Flex, Spin, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import CreateFolder from './components/FolderModal'
-import { gql, useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 import PreviewImages from './components/PreviewImages'
-import { useUploadStore } from '../../store/uploadStatusStore'
-import { useFileStore } from '../../store/filesDataStore'
 import FileList from './components/FileList'
 import BreadCrumb from './components/Breadcrumb'
-import { useFolderStore } from '../../store/folderDataStore'
-
-const FILES_DATA = gql`
-	query files($folderId: ID) {
-		files(folderId: $folderId) {
-			_id
-			name
-			size
-			type
-			url
-			uploadedAt
-			folderId
-		}
-	}
-`
-
-const FOLDERS_DATA = gql`
-	query {
-		folders {
-			_id
-			name
-			size
-			url
-			uploadedAt
-		}
-	}
-`
+import { useUploadStore } from '@/store/uploadStatusStore'
+import { useFileStore } from '@/store/filesDataStore'
+import { useFolderStore } from '@/store/folderDataStore'
+import { FILES_DATA, FOLDERS_DATA } from '@/graphql/queries'
 
 const MainPage = () => {
 	// STORES

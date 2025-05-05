@@ -1,12 +1,15 @@
+import React from 'react'
 import { Button, Flex, Modal, Typography } from 'antd'
-import { useFileStore } from '../../../store/filesDataStore'
 import { FolderOutlined } from '@ant-design/icons'
 import '../styles/styles.css'
-import { gql, useMutation } from '@apollo/client'
-import { FilesDataType } from '../../../types/filesType'
-import CustomAlert from '../../../utils/CustomAlert'
-import { useUploadStore } from '../../../store/uploadStatusStore'
+import { useMutation } from '@apollo/client'
 import { useEffect } from 'react'
+import { FilesDataType } from '@/types/filesType'
+import { MOVE_FILE } from '@/graphql/mutations'
+import { useFileStore } from '@/store/filesDataStore'
+import { useUploadStore } from '@/store/uploadStatusStore'
+import CustomAlert from '@/utils/customAlert'
+import { handleError } from '@/utils/handleError'
 
 type MoveFileModalProps = {
 	isModalOpen: boolean
@@ -15,22 +18,6 @@ type MoveFileModalProps = {
 	filesRefetch: () => void
 	foldersRefetch: () => void
 }
-
-const MOVE_FILE = gql`
-	mutation fileMove(
-		$oldKey: String!
-		$newKey: String!
-		$fileId: ID!
-		$newFolderId: ID
-	) {
-		fileMove(
-			oldKey: $oldKey
-			newKey: $newKey
-			fileId: $fileId
-			newFolderId: $newFolderId
-		)
-	}
-`
 
 const MoveFileModal = ({
 	isModalOpen,
@@ -68,8 +55,8 @@ const MoveFileModal = ({
 			CustomAlert.success(res.data.fileMove)
 			filesRefetch()
 			foldersRefetch()
-		} catch (error: any) {
-			CustomAlert.error(error.message)
+		} catch (error) {
+			CustomAlert.error(handleError(error))
 		}
 	}
 

@@ -1,10 +1,13 @@
 import { UploadFile } from 'antd'
 import { create } from 'zustand'
 
+/**
+ * Current Store for collect data about images and URL's
+ */
 type PreviewStoreState = {
-	images: UploadFile<any>[]
+	images: UploadFile<unknown>[]
 	imagesURL: string[]
-	setImages: (files: UploadFile<any>[]) => void
+	setImages: (files: UploadFile<unknown>[]) => void
 	updateImages: (index: number) => void
 	clearImages: () => void
 }
@@ -12,7 +15,7 @@ type PreviewStoreState = {
 const usePreviewStore = create<PreviewStoreState>((set, get) => ({
 	images: [],
 	imagesURL: [],
-	setImages: (files: UploadFile<any>[]) => {
+	setImages: (files: UploadFile<unknown>[]) => {
 		const imagePreviews = files.map((file) => {
 			if (file.originFileObj) {
 				return URL.createObjectURL(file.originFileObj)

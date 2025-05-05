@@ -1,3 +1,4 @@
+import React from 'react'
 import {
 	CaretDownOutlined,
 	CloseOutlined,
@@ -13,9 +14,9 @@ import {
 	Upload,
 } from 'antd'
 import { UploadChangeParam, UploadFile } from 'antd/es/upload'
-import { Dispatch, SetStateAction, useMemo, useState } from 'react'
-import usePreviewStore from '../../../store/previewStore'
-import { useFolderStore } from '../../../store/folderDataStore'
+import { Dispatch, SetStateAction, useMemo } from 'react'
+import usePreviewStore from '@/store/previewStore'
+import { useFolderStore } from '@/store/folderDataStore'
 
 type BreadCrumbProps = {
 	setIsModalOpen: Dispatch<SetStateAction<boolean>>
@@ -26,7 +27,7 @@ const BreadCrumb = ({ setIsModalOpen, setIsPreviewModal }: BreadCrumbProps) => {
 	const { setImages, images } = usePreviewStore()
 	const { folderData, setFolderData } = useFolderStore()
 
-	const handleUpload = (e: UploadChangeParam<UploadFile<any>>) => {
+	const handleUpload = (e: UploadChangeParam<UploadFile<unknown>>) => {
 		setImages(e.fileList)
 		setIsPreviewModal(true)
 	}

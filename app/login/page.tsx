@@ -1,30 +1,13 @@
 'use client'
-
+import React from 'react'
 import { EyeInvisibleOutlined, EyeOutlined } from '@ant-design/icons'
 import { Button, Flex, Input, Typography } from 'antd'
-import { gql, useMutation } from '@apollo/client'
+import { useMutation } from '@apollo/client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import CustomAlert from '../../utils/CustomAlert'
-
-const REGISTER = gql`
-	mutation Register($username: String!, $password: String!) {
-		register(username: $username, password: $password) {
-			id
-			username
-			token
-		}
-	}
-`
-const LOGIN = gql`
-	mutation Login($username: String!, $password: String!) {
-		login(username: $username, password: $password) {
-			id
-			username
-			token
-		}
-	}
-`
+import { LOGIN, REGISTER } from '@/graphql/mutations'
+import { handleError } from '@/utils/handleError'
+import CustomAlert from '@/utils/customAlert'
 
 const LoginPage = () => {
 	const router = useRouter()
@@ -41,8 +24,9 @@ const LoginPage = () => {
 			const token = res.data[action].token
 			localStorage.setItem('token', token)
 			router.push('/main')
-		} catch (error: any) {
-			CustomAlert.error(error.message)
+		} catch (error) {
+			const message = handleError(error, 'Auth')
+			CustomAlert.error(message)
 		}
 	}
 

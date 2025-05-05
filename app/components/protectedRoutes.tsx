@@ -1,8 +1,8 @@
 'use client'
-
+import React from 'react'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import ApolloProviderWrapper from '../../lib/ApolloProvider'
+import ApolloProviderWrapper from '@/lib/ApolloProvider'
 
 type ProtectedRouteProps = {
 	children: React.ReactNode

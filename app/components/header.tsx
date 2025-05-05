@@ -1,36 +1,36 @@
 'use client'
-
+import React from 'react'
 import {
 	AntCloudOutlined,
 	SearchOutlined,
 	UserOutlined,
 } from '@ant-design/icons'
-import { gql, useLazyQuery } from '@apollo/client'
-import { Flex, Input, Typography } from 'antd'
+import { useLazyQuery } from '@apollo/client'
+import { Avatar, Dropdown, Flex, Input, MenuProps, Typography } from 'antd'
 import { ChangeEvent } from 'react'
-import { FilesDataType } from '../../types/filesType'
-import { useFileStore } from '../../store/filesDataStore'
+import { useRouter } from 'next/navigation'
+import { useFileStore } from '@/store/filesDataStore'
+import { SEARCH_FILES } from '@/graphql/queries'
+import { FilesDataType } from '@/types/filesType'
 
-const SEARCH_FILES = gql`
-	query searchFiles($query: String) {
-		searchFiles(query: $query) {
-			_id
-			name
-			size
-			type
-			url
-			uploadedAt
-			folderId
-		}
-	}
-`
+const menuItems: MenuProps['items'] = [
+	{
+		key: '1',
+		label: 'Профиль',
+	},
+	{
+		key: '2',
+		label: 'Выйти',
+	},
+]
 
 const Header = () => {
 	const { Title } = Typography
+	const router = useRouter()
 	const { setFiles, setFolders } = useFileStore()
+	const [searchData] = useLazyQuery(SEARCH_FILES)
 
 	let debounceTimeout: NodeJS.Timeout
-	const [searchData] = useLazyQuery(SEARCH_FILES)
 
 	const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value
@@ -53,6 +53,13 @@ const Header = () => {
 				},
 			})
 		}, 500)
+	}
+
+	const handleMenuClick = (key: string) => {
+		if (key === '2') {
+			localStorage.removeItem('token')
+			router.push('/login')
+		}
 	}
 
 	return (
@@ -89,16 +96,20 @@ const Header = () => {
 				/>
 			</Flex>
 			<Flex>
-				<div
-					style={{
-						border: '2px solid #fff',
-						borderRadius: 50,
-						padding: 10,
-						cursor: 'pointer',
+				<Dropdown
+					menu={{
+						items: menuItems,
+						onClick: ({ key }) => handleMenuClick(key),
 					}}
+					trigger={['click']}
 				>
-					<UserOutlined style={{ fontSize: 30, color: '#fff' }} />
-				</div>
+					<Avatar
+						data-testid="avatar-dropdown"
+						size={50}
+						icon={<UserOutlined />}
+						style={{ cursor: 'pointer' }}
+					/>
+				</Dropdown>
 			</Flex>
 		</Flex>
 	)

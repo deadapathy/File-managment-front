@@ -1,8 +1,11 @@
+import React from 'react'
 import { Input, InputRef, Modal } from 'antd'
 import { Dispatch, SetStateAction, useEffect, useRef } from 'react'
-import { gql, useMutation } from '@apollo/client'
-import CustomAlert from '../../../utils/CustomAlert'
-import { useUploadStore } from '../../../store/uploadStatusStore'
+import { useMutation } from '@apollo/client'
+import { CREATE_FOLDER } from '@/graphql/mutations'
+import { useUploadStore } from '@/store/uploadStatusStore'
+import CustomAlert from '@/utils/customAlert'
+import { handleError } from '@/utils/handleError'
 
 type CreateFolderProps = {
 	folderName: string
@@ -11,15 +14,6 @@ type CreateFolderProps = {
 	setFolderName: Dispatch<SetStateAction<string>>
 	refetch: () => void
 }
-
-const CREATE_FOLDER = gql`
-	mutation CreateFolder($folderName: String!) {
-		createFolder(folderName: $folderName) {
-			success
-			message
-		}
-	}
-`
 
 const CreateFolder = ({
 	folderName,
@@ -43,8 +37,8 @@ const CreateFolder = ({
 			const { message } = res.data.createFolder
 			CustomAlert.success(message)
 			await refetch()
-		} catch (error: any) {
-			CustomAlert.error(error.message)
+		} catch (error) {
+			CustomAlert.error(handleError(error, 'Delete'))
 		}
 	}
 

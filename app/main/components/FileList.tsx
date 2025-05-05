@@ -1,105 +1,42 @@
-import {
-	Dropdown,
-	Flex,
-	Image,
-	MenuProps,
-	Table,
-	TableProps,
-	Typography,
-} from 'antd'
-import { FilesDataType } from '../../../types/filesType'
-import { useFileStore } from '../../../store/filesDataStore'
+import React from 'react'
+import { Dropdown, Flex, Image, MenuProps, Table, Typography } from 'antd'
 import { FolderOutlined, MoreOutlined } from '@ant-design/icons'
-import { useFolderStore } from '../../../store/folderDataStore'
-import { gql, useLazyQuery, useMutation, useQuery } from '@apollo/client'
-import CustomAlert from '../../../utils/CustomAlert'
-import { useUploadStore } from '../../../store/uploadStatusStore'
-import { useEffect, useMemo, useState } from 'react'
 import RenameModal from './RenameModal'
 import MoveFileModal from './MoveFileModal'
+import { useFileListLogic } from '../hooks/useFileListLogic'
+import { FilesDataType } from '@/types/filesType'
 
 type FilesListProps = {
 	filesRefetch: () => void
 	foldersRefetch: () => void
 }
 
-const DELETE_FILE = gql`
-	mutation DeleteFile($fileUrl: String!, $fileId: ID!) {
-		deleteFile(fileUrl: $fileUrl, fileId: $fileId)
-	}
-`
-
-const DELETE_FOLDER = gql`
-	mutation DeleteFolder($folderUrl: String!, $folderId: ID!) {
-		deleteFolder(folderUrl: $folderUrl, folderId: $folderId)
-	}
-`
-
-const DOWNLOAD_FILE = gql`
-	query getDownloadUrl($key: String!) {
-		getDownloadUrl(key: $key)
-	}
-`
-
-const rowSelection: TableProps<FilesDataType>['rowSelection'] = {
-	onChange: (selectedRowKeys: React.Key[], selectedRows: FilesDataType[]) => {
-		console.log(
-			`selectedRowKeys: ${selectedRowKeys}`,
-			'selectedRows: ',
-			selectedRows
-		)
+const menuItems: MenuProps['items'] = [
+	{
+		key: '1',
+		label: 'Переименовать',
 	},
-	getCheckboxProps: (record: FilesDataType) => ({
-		disabled: record.name === 'Disabled User',
-		name: record.name,
-	}),
-}
+	{
+		key: '2',
+		label: 'Скачать',
+	},
+	{
+		key: '3',
+		label: 'Удалить',
+	},
+	{
+		key: '4',
+		label: 'Переместить',
+	},
+]
 
 const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
-	const [deleteFile, { loading: deleteFileLoading }] = useMutation(DELETE_FILE)
-	const [deleteFolder, { loading: deleteFolderLoading }] =
-		useMutation(DELETE_FOLDER)
-	const [getDownloadUrl] = useLazyQuery(DOWNLOAD_FILE)
-
-	const { files, folders } = useFileStore()
-	const { folderData, setFolderData } = useFolderStore()
-	const { setUploading, setStatusText } = useUploadStore()
-
-	const [modal, setModal] = useState<{
-		open: boolean
-		data: FilesDataType | undefined
-		type: 'rename' | 'move' | undefined
-	}>({
-		open: false,
-		type: undefined,
-		data: undefined,
-	})
-
-	const menuItems: MenuProps['items'] = [
-		{
-			key: '1',
-			label: 'Переименовать',
-		},
-		{
-			key: '2',
-			label: 'Скачать',
-		},
-		{
-			key: '3',
-			label: 'Удалить',
-		},
-		{
-			key: '4',
-			label: 'Переместить',
-		},
-	]
-
 	const columns = [
 		{
 			title: 'Название',
 			dataIndex: 'name',
 			key: 'name',
-			render: (_: any, record: FilesDataType) => {
+			render: (_: unknown, record: FilesDataType) => {
 				return (
 					<Flex>
 						{record.type === 'folder' ? (
@@ -146,7 +83,7 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 		{
 			title: '',
 			key: 'action',
-			render: (_: any, record: FilesDataType) => {
+			render: (_: unknown, record: FilesDataType) => {
 				return (
 					<Flex style={{ justifyContent: 'center' }}>
 						<Dropdown
@@ -169,91 +106,13 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 		},
 	]
 
-	const handleDelete = async (record: FilesDataType) => {
-		try {
-			if (record.type === 'folder') {
-				setStatusText('Удаление папки')
-				await deleteFolder({
-					variables: {
-						folderUrl: decodeURIComponent(
-							new URL(record.url).pathname.slice(1)
-						),
-						folderId: record._id,
-					},
-				})
-				foldersRefetch()
-			} else {
-				setStatusText('Удаление файла')
-				await deleteFile({
-					variables: {
-						fileUrl: decodeURIComponent(new URL(record.url).pathname.slice(1)),
-						fileId: record._id,
-					},
-				})
-				filesRefetch()
-			}
-		} catch (error: any) {
-			CustomAlert.error(error.message)
-		}
-	}
-
-	const handleMenuClick = async (key: string, record: FilesDataType) => {
-		if (key === '1') {
-			// Rename
-			setModal({ ...modal, open: true, data: record, type: 'rename' })
-		} else if (key === '2') {
-			// Download
-			const fileKey = decodeURIComponent(new URL(record.url).pathname.slice(1))
-
-			getDownloadUrl({
-				variables: { key: fileKey },
-				onCompleted: (data) => {
-					const downloadUrl = data?.getDownloadUrl
-					if (downloadUrl) {
-						window.open(downloadUrl, '_blank')
-					}
-				},
-				onError: (err) => {
-					CustomAlert.error(err.message)
-				},
-			})
-		} else if (key === '3') {
-			// Delete
-			handleDelete(record)
-		} else {
-			setModal({ ...modal, open: true, data: record, type: 'move' })
-		}
-	}
-
-	const handleRowDoubleClick = (record: FilesDataType) => {
-		if (record.type === 'folder') {
-			setFolderData(record)
-		}
-	}
-
-	const combinedData = useMemo(() => {
-		const filteredFolders = folders
-			.filter((folder) => (folderData ? !folder : folder))
-			.map((folder) => ({
-				...folder,
-				type: 'folder',
-			}))
-
-		const filteredFiles = files
-			.filter((file) =>
-				file.folderId ? folderData?._id === file.folderId : file
-			)
-			.map((file) => ({
-				...file,
-			}))
-
-		return [...filteredFolders, ...filteredFiles]
-	}, [folders, files, folderData])
-
-	useEffect(() => {
-		setUploading(deleteFolderLoading)
-		setUploading(deleteFileLoading)
-	}, [deleteFileLoading, deleteFolderLoading])
+	const {
+		modal,
+		setModal,
+		handleMenuClick,
+		handleRowDoubleClick,
+		combinedData,
+	} = useFileListLogic(filesRefetch, foldersRefetch)
 
 	return (
 		<div
@@ -264,7 +123,6 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 			}}
 		>
 			<Table<FilesDataType>
-				rowSelection={{ ...rowSelection }}
 				columns={columns}
 				dataSource={combinedData}
 				rowKey={'_id'}

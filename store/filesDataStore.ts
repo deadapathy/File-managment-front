@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { FilesDataType } from '../types/filesType'
 
+/**
+ * Current Store for collect folders and files
+ */
 type FileStore = {
 	files: FilesDataType[] | []
 	folders: FilesDataType[] | []

@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 
+/**
+ * Current store for spinner and status text
+ */
 type UploadState = {
 	isUploading: boolean
 	statusText: string
