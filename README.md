@@ -11,13 +11,12 @@ To start project
 npm install
 npm run dev
 ```
+Also need to run backend
 
 To start with Docker
 ```
 docker-compose up --build
 ```
-
-Also need to run backend
 
 ### BASIC FUNCIONALITY
 
