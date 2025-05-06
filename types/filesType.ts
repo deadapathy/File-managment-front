@@ -7,3 +7,5 @@ export type FilesDataType = {
 	uploadedAt: string
 	folderId: string
 }
+
+export type ModalType = 'rename' | 'move' | undefined

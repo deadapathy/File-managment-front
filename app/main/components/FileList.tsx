@@ -1,10 +1,9 @@
 import React from 'react'
 import { Dropdown, Flex, Image, MenuProps, Table, Typography } from 'antd'
 import { FolderOutlined, MoreOutlined } from '@ant-design/icons'
-import RenameModal from './RenameModal'
-import MoveFileModal from './MoveFileModal'
 import { useFileListLogic } from '../hooks/useFileListLogic'
 import { FilesDataType } from '@/types/filesType'
+import FileOperationModal from './FileOperationModal'
 
 type FilesListProps = {
 	filesRefetch: () => void
@@ -132,21 +131,10 @@ const FileList = ({ filesRefetch, foldersRefetch }: FilesListProps) => {
 				pagination={{ pageSize: 10 }}
 			/>
 
-			{modal.type === 'rename' && (
-				<RenameModal
-					closeModal={() => setModal({ ...modal, open: false })}
-					isModalOpen={modal.open}
-					data={modal.data}
-					filesRefetch={filesRefetch}
-					foldersRefetch={foldersRefetch}
-				/>
-			)}
-
-			{modal.type === 'move' && (
-				<MoveFileModal
-					isModalOpen={modal.open}
-					closeModal={() => setModal({ ...modal, open: false })}
-					fileData={modal.data}
+			{modal.open && (
+				<FileOperationModal
+					modal={modal}
+					setModal={setModal}
 					filesRefetch={filesRefetch}
 					foldersRefetch={foldersRefetch}
 				/>

@@ -12,7 +12,7 @@
  */
 import { useMemo, useEffect, useState } from 'react'
 import { useMutation, useLazyQuery } from '@apollo/client'
-import { FilesDataType } from '@/types/filesType'
+import { FilesDataType, ModalType } from '@/types/filesType'
 import { useFileStore } from '@/store/filesDataStore'
 import { useFolderStore } from '@/store/folderDataStore'
 import { useUploadStore } from '@/store/uploadStatusStore'
@@ -21,10 +21,10 @@ import { DOWNLOAD_FILE } from '@/graphql/queries'
 import CustomAlert from '@/utils/customAlert'
 import { handleError } from '@/utils/handleError'
 
-type ModalState = {
+export type ModalState = {
 	open: boolean
 	data: FilesDataType | undefined
-	type: 'rename' | 'move' | undefined
+	type: ModalType
 }
 
 export const useFileListLogic = (
